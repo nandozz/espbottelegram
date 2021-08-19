@@ -31,11 +31,9 @@ String AP = "Rumah Gas";
 const int AdminID = -508399154;
 
 String DevNum = "#1";
-int UserID = -465154529;
+int UserID=0;
 String GroupName = "Group Name";
-String Address = "GMI G1.1";
-
-//const char index_html[] PROGMEM = {"<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<style>\n.card {\n  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);\n  transition: 0.3s;\n  width: 40%;\n}\n\n.card:hover {\n  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);\n}\n\n.container {\n  padding: 20px 16px;\n}\n</style>\n</head>\n<body>\n\n<h2>\"Rumah Gas\"</h2>\n<div class=\"card\">  \n  <div class=\"container\">\n  \t<form action=\"/action_page.php\">\n      <label>SSID:</label><br>\n      <input name=\"ssid\"><br><br>\n      <label>Password:</label>\n      <input type=\"text\" name=\"pass\"><br><br>\n      <input type=\"submit\" >\n\t</form>\n  </div>\n</div>\n\n</body>\n</html> \n"};
+String Address = "";
 
 //ESP1
 int Relay = 0;
@@ -95,8 +93,17 @@ void settingUp()
   Serial.print("PASS: ");
   Serial.println(epass);
 
-  String euserid = "";
+  String eaddress = "";
   for (int i = 96; i < 106; ++i)
+  {
+    eaddress += char(EEPROM.read(i));
+  }
+  Serial.print("Address: ");
+  Serial.println(eaddress);
+  Address = eaddress;
+
+  String euserid = "";
+  for (int i = 106; i < 116; ++i)
   {
     euserid += char(EEPROM.read(i));
   }
@@ -118,7 +125,7 @@ void settingUp()
   if (myBot.testConnection())
   {
     Serial.print("Success to connect");
-    myBot.sendMessage(UserID, "Device : " + DevNum + " ("+ WiFi.localIP().toString() +")\nUserID : " + UserID + "\nAddress : " + Address + "\n--- Alat Siap Digunakan ---");
+ myBot.sendMessage(UserID, "Device : " + DevNum + " ("+ WiFi.localIP().toString() +")\nUserID : " + UserID + "\nAddress : " + Address + "\n--- Alat Siap Digunakan ---");
 
 
     digitalWrite(Relay, HIGH);
@@ -215,20 +222,15 @@ void setupAP(void)
     }
   }
   Serial.println("");
-  st = "<ol>";
+  st = "<select name='ssid'>";
   for (int i = 0; i < n; ++i)
   {
     // Print SSID and RSSI for each network found
-    st += "<li>";
+    st += "<option>";
     st += WiFi.SSID(i);
-    st += " (";
-    st += WiFi.RSSI(i);
-
-    st += ")";
-    st += (WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*";
-    st += "</li>";
+    st += "</option>";
   }
-  st += "</ol>";
+  st += "</select>";
   delay(100);
   
   WiFi.softAP(AP, "");
@@ -251,18 +253,61 @@ void createWebServer()
 {
  {
     server.on("/", []() {
-//const char index_html[] PROGMEM = {"<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<style>\n.card {\n  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);\n  transition: 0.3s;\n  width: 40%;\n}\n\n.card:hover {\n  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);\n}\n\n.container {\n  padding: 20px 16px;\n}\n</style>\n</head>\n<body>\n\n<h2>\"Rumah Gas\"</h2>\n<div class=\"card\">  \n  <div class=\"container\">\n  \t<form action=\"/action_page.php\">\n      <label>SSID:</label><br>\n      <input name=\"ssid\"><br><br>\n      <label>Password:</label>\n      <input type=\"text\" name=\"pass\"><br><br>\n      <input type=\"submit\" >\n\t</form>\n  </div>\n</div>\n\n</body>\n</html> \n"};
 
       IPAddress ip = WiFi.softAPIP();
       String ipStr = String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
-      content = "<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<style>\n.card {\n  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);\n  transition: 0.3s;\n  width: 60%;\n}\n\n.card:hover {\n  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);\n}\n\n.container {\n  padding: 20px 16px;\n}\n</style>\n</head>\n<body>\n\n<h2>\"Rumah Gas\"</h2>\n";
-//      content += "<form action=\"/scan\" method=\"POST\"><input type=\"submit\" value=\"scan\"></form>";
-      content += ipStr;
-      content += "<p> Please select to your Access Point";
-      content += st;
-      content += "</p>";
-      content += "<div class=\"card\">  \n  <div class=\"container\">\n  \t<form  method='get' action='setting'>\n<label>SSID:</label><br>\n<input name=\"ssid\"length=32><br><br>\n<label>Password:</label>\n<input type=\"text\" name=\"pass\"length=64><br><br>\n <label>Telegram ID Group:</label>\n<input type=\"text\" name=\"userid\"length=10><br><br>\n<input type=\"submit\" >\n\t</form>\n  </div>\n</div>\n\n</body>\n</html> \n";
+      /////////////////////////////////////////////////
+content = "<!DOCTYPE html>\n";
+content += "<html>\n";
+content += "<head>\n";
+content +="<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n";
+content +="<style>h2{text-align: center;}body{display: flex;flex-direction: column;justify-content: center;}";
+content +="input, select{font-size: 1.2rem;margin-top: 5px;margin-bottom: 20px;border-radius: 10px;height: 35px;padding: 5px;display: block;\n";
+content +="width: 97%;border:none;border-bottom: 1px solid #1890ff;outline: none;}";
+content +="[placeholder]:focus::-webkit-input-placeholder {\n";
+content +="transition: text-indent 0.4s 0.4s ease;text-indent: -100%;opacity: 1;}\n";
+content +=".card {\n";
+content +="position: relative;width: 80%;margin-left: auto;margin-right: auto;padding: 5%;border-radius: 20px;\n";
+content +="background: linear-gradient(162.54deg, rgba(160, 198, 245, 1) 6.43%, rgba(160, 198, 245, 0) 95.91%);\n";
+content +="border: 1px solid #E5E5E5;}\n";
+content +=".card:hover {box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);}\n";
+content +="button {\n";
+content +="background: #7E9CC0;\n";
+content +="border: none;\n";
+content +="box-sizing: border-box;\n";
+content +="box-shadow: 0px 4px 8px #A0C6F5;\n";
+content +="border-radius: 10px;\n";
+content +="height: 56px;\n";
+content +="display: block;\n";
+content +="width: 100%;\n";
+content +="color: white;\n";
+content +="} \n";
+content +="</style>\n";
+content +="</head>\n";
+content +="<body>\n";
+content +="<h2>\""+AP+"\"</h2>\n<p> ";
+content += ipStr;
+content += "</p>\n<p> Please select your Access Point</p>";
+content +="<div class=\"card\">  \n";
+content +="  <div class=\"container\">\n";
+content +="  \t<form  method='get' action='setting'>\n";
+content +="      <label for=\"fname\">SSID:</label><br>\n";
+content += st;
+content +="      <label>Password:</label>\n";
+content +="      <input type=\"text\" name=\"pass\" placeholder=\"password\" required>\n";
+content +="      <label>Address:</label>\n";
+content +="      <input type=\"text\" name=\"address\" placeholder=\"A1.1\" required>\n";
+content +="      <label>Telegram ID Group:</label>\n";
+content +="      <input type=\"text\" name=\"userid\" placeholder=\"-123456789\" required>\n";
+content +="      <button type=\"submit\" >Connect</button> \n";
+content +="\t</form>   \n";
+content +="  </div>\n";
+content +="</div>\n";
+content +="</body>\n";
+content +="</html> ";
 
+
+      
       server.send(200, "text/html", content);
     });
 
@@ -270,6 +315,7 @@ void createWebServer()
     server.on("/setting", []() {
       String qsid = server.arg("ssid");
       String qpass = server.arg("pass");
+      String qaddress = server.arg("address");
       String quserid = server.arg("userid");
       if (qsid.length() > 0 && qpass.length() > 0) {
         Serial.println("clearing eeprom");
@@ -279,6 +325,8 @@ void createWebServer()
         Serial.println(qsid);
         Serial.println("");
         Serial.println(qpass);
+        Serial.println("");
+        Serial.println(qaddress);
         Serial.println("");
         Serial.println(quserid);
         Serial.println("");
@@ -297,10 +345,17 @@ void createWebServer()
           Serial.print("Wrote: ");
           Serial.println(qpass[i]);
         }
-        Serial.println("writing eeprom userid:");
-        for (int i = 0; i < qpass.length(); ++i)
+        Serial.println("writing eeprom address:");
+        for (int i = 0; i < qaddress.length(); ++i)
         {
-          EEPROM.write(96 + i, qpass[i]);
+          EEPROM.write(96 + i, qaddress[i]);
+          Serial.print("Wrote: ");
+          Serial.println(qaddress[i]);
+        }
+        Serial.println("writing eeprom userid:");
+        for (int i = 0; i < quserid.length(); ++i)
+        {
+          EEPROM.write(106 + i, quserid[i]);
           Serial.print("Wrote: ");
           Serial.println(quserid[i]);
         }

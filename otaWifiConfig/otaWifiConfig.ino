@@ -42,10 +42,18 @@ void loop()
     }
     else if (command == "/" + DevNum + "restart")
     {
+      myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + UserID + ")\n--- Restart, Are you Sure ? ---\n/"+DevNum+"YES\t\t/"+DevNum+"NO");
+      restarting = true;      
+      
+    }
+    else if (restarting && command == "/" + DevNum + "YES")
+    {
       myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + UserID + ")\n--- Restart ---");
       myBot.sendMessage(UserID, "Device : " + DevNum + " (" + UserID + ")\n--- Restart by Admin ---");
+      restarting = false;      
       ESP.restart();
     }
+    
     else if (command == "/" + DevNum + "on")
     {
       myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + UserID + ")\n--- Relay ON ---");
@@ -62,8 +70,14 @@ void loop()
     }
     else if (command == "/" + DevNum + "reset")
     {
+      myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + UserID + ")\n--- RESET, Are you Sure ? ---\n/"+DevNum+"YES\t\t/"+DevNum+"NO");
+      reseting = true;   
+    }
+    else if (reseting && command == "/" + DevNum + "YES")
+    {
       myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + UserID + ")\n--- RESET ---");
-      myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + UserID + ")\n--- RESET by Admin ---");
+      myBot.sendMessage(UserID, "Device : " + DevNum + " (" + UserID + ")\n--- RESET by Admin ---");
+      reseting = false;   
       resetAll();
     }
     }
@@ -75,7 +89,7 @@ void loop()
       if (command == "/order")
       {
         //toAdminID
-        myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + int64ToAscii(msg.group.id) + ")\nName : " + (String)msg.group.title + "\nAddress : " + Address + "\n--- ORDER ---");
+        myBot.sendMessage(AdminID, "Device : " + DevNum + " (" + int64ToAscii(msg.group.id) + ")\nName : " + (((String)msg.group.title == "")?(String)msg.sender.firstName : (String)msg.group.title) + "\nAddress : " + Address + "\n--- ORDER ---");
         //toUserID
         myBot.sendMessage(UserID, "Terimakasih, " + (String)msg.sender.firstName + "\nPesanan sudah diteruskan ke Admin");
       }
@@ -96,7 +110,7 @@ void loop()
       else if (command == "/status")
       {
         myBot.sendMessage(UserID, "Device : " + DevNum + " (" + UserID + 
-        ")\nStatus Fan : "+(fan ? "HiDUP" : "MATI") + 
+        ")\nStatus Fan : "+(fan ? "ON" : "OFF") + 
         "\nStatus Gas : "+(gas ? "BAHAYA" : "AMAN"));
       }
 
@@ -121,9 +135,10 @@ void loop()
       else if (reseting && command == "/YES")
       {
         myBot.sendMessage(UserID, "Device : " + DevNum + " (" + UserID +
-                                      ")\nAlat tidak terhubung ke WiFi, segera lakukan registrasi kembali dengan cara " +
-                                      "\n1. Hubungkan perangkat handphone/komputer ke jaringan AP \"" + AP + "\"" +
-                                      "\n2. akses alamat IP " + IP);
+                                      ")\nReset Selesai \nLakukan registrasi kembali dengan cara :" +
+                                      "\n1. Hubungkan perangkat handphone/komputer ke jaringan WiFi \"" + AP + "\"" +
+                                      "\n2. Ketik pada browser alamat IP " + IP+
+                                      "\n3. Telegram ID Group saat ini :" + UserID);
                                       reseting = false;
                                       resetAll();
                                       
